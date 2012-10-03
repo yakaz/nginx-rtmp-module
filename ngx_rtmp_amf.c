@@ -427,6 +427,12 @@ ngx_rtmp_amf_read(ngx_rtmp_amf_ctx_t *ctx, ngx_rtmp_amf_elt_t *elts,
                 ngx_rtmp_amf_reverse_copy(data, buf, 4);
                 break;
 
+            case NGX_RTMP_AMF_RAWDATA:
+                if (ngx_rtmp_amf_get(ctx, data, elts->len) != NGX_OK) {
+                    return NGX_ERROR;
+                }
+                break;
+
             case NGX_RTMP_AMF_END:
                 return NGX_OK;
 
@@ -612,6 +618,16 @@ ngx_rtmp_amf_write(ngx_rtmp_amf_ctx_t *ctx,
                             ngx_rtmp_amf_reverse_copy(buf, 
                                 data, 4), 4) != NGX_OK) 
                 {
+                    return NGX_ERROR;
+                }
+                break;
+
+            case NGX_RTMP_AMF_RAWDATA:
+                if (len == 0 && data) {
+                    len = ngx_strlen((u_char*)data);
+                }
+
+                if (ngx_rtmp_amf_put(ctx, data, len) != NGX_OK) {
                     return NGX_ERROR;
                 }
                 break;

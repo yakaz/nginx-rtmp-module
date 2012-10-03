@@ -201,7 +201,7 @@ ngx_rtmp_live_join(ngx_rtmp_session_t *s, u_char *name,
 
     stream = ngx_rtmp_live_get_stream(s, name, 1);
     if (stream == NULL) {
-        return;
+      return;;
     }
     if (flags & NGX_RTMP_LIVE_PUBLISHING) {
         if ((*stream)->flags & NGX_RTMP_LIVE_PUBLISHING) {

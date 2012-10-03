@@ -27,6 +27,7 @@
 #define NGX_RTMP_AMF_INT16              0x0101
 #define NGX_RTMP_AMF_INT32              0x0102
 #define NGX_RTMP_AMF_VARIANT_           0x0103
+#define NGX_RTMP_AMF_RAWDATA            0x0104
 
 /* r/w flags */
 #define NGX_RTMP_AMF_OPTIONAL           0x1000

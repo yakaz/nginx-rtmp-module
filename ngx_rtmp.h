@@ -140,6 +140,18 @@ typedef struct {
 #define NGX_RTMP_USER_PING_RESPONSE     7
 #define NGX_RTMP_USER_UNKNOWN           8
 
+/* RMTP sharedobject message types */
+#define NGX_RTMP_SHARED_USE             1
+#define NGX_RTMP_SHARED_RELEASE         2
+#define NGX_RTMP_SHARED_REQUEST_CHANGE  3
+#define NGX_RTMP_SHARED_CHANGE          4
+#define NGX_RTMP_SHARED_SUCCESS         5
+#define NGX_RTMP_SHARED_SEND_MESSAGE    6
+#define NGX_RTMP_SHARED_STATUS          7
+#define NGX_RTMP_SHARED_CLEAR           8
+#define NGX_RTMP_SHARED_REMOVE          9
+#define NGX_RTMP_SHARED_REQUEST_REMOVE  10
+#define NGX_RTMP_SHARED_USE_SUCCESS     11
 
 /* Chunk header:
  *   max 3  basic header
