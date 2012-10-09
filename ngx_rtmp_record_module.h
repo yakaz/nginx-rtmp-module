@@ -27,6 +27,7 @@ typedef struct {
     ngx_str_t                           suffix;
     ngx_flag_t                          unique;
     ngx_flag_t                          notify;
+    ngx_msec_t                          sampling_interval;
     ngx_url_t                          *url;
 
     void                              **rec_conf;
@@ -41,6 +42,7 @@ typedef struct {
     uint32_t                            epoch;
     ngx_time_t                          last;
     time_t                              timestamp;
+    uint32_t                            last_sample;
 } ngx_rtmp_record_rec_ctx_t;
 
 

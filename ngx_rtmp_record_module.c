@@ -119,6 +119,14 @@ static ngx_command_t  ngx_rtmp_record_commands[] = {
       offsetof(ngx_rtmp_record_app_conf_t, notify),
       NULL },
 
+    { ngx_string("record_sampling_interval"),
+      NGX_RTMP_MAIN_CONF|NGX_RTMP_SRV_CONF|NGX_RTMP_APP_CONF|
+                         NGX_RTMP_REC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_msec_slot,
+      NGX_RTMP_APP_CONF_OFFSET,
+      offsetof(ngx_rtmp_record_app_conf_t, sampling_interval),
+      NULL },
+
     { ngx_string("recorder"),
       NGX_RTMP_APP_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE1,
       ngx_rtmp_record_recorder,
@@ -170,12 +178,13 @@ ngx_rtmp_record_create_app_conf(ngx_conf_t *cf)
         return NULL;
     }
 
-    racf->max_size   = NGX_CONF_UNSET;
-    racf->max_frames = NGX_CONF_UNSET;
-    racf->interval   = NGX_CONF_UNSET;
-    racf->unique     = NGX_CONF_UNSET;
-    racf->notify     = NGX_CONF_UNSET;
-    racf->url        = NGX_CONF_UNSET_PTR;
+    racf->max_size          = NGX_CONF_UNSET;
+    racf->max_frames        = NGX_CONF_UNSET;
+    racf->interval          = NGX_CONF_UNSET;
+    racf->unique            = NGX_CONF_UNSET;
+    racf->notify            = NGX_CONF_UNSET;
+    racf->sampling_interval = NGX_CONF_UNSET;
+    racf->url               = NGX_CONF_UNSET_PTR;
 
     if (ngx_array_init(&racf->rec, cf->pool, 1, sizeof(void *)) != NGX_OK) {
         return NULL;
@@ -196,6 +205,7 @@ ngx_rtmp_record_merge_app_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->suffix, prev->suffix, ".flv");
     ngx_conf_merge_size_value(conf->max_size, prev->max_size, 0);
     ngx_conf_merge_size_value(conf->max_frames, prev->max_frames, 0);
+    ngx_conf_merge_size_value(conf->sampling_interval, prev->sampling_interval, 0);
     ngx_conf_merge_value(conf->unique, prev->unique, 0);
     ngx_conf_merge_value(conf->notify, prev->notify, 0);
     ngx_conf_merge_msec_value(conf->interval, prev->interval, 
@@ -642,12 +652,18 @@ ngx_rtmp_record_write_frame(ngx_rtmp_session_t *s,
 
     rracf = rctx->conf;
 
+    timestamp = h->timestamp - rctx->epoch;
+
+    /* check the sample rate */
+    if (rctx->last_sample &&
+        (timestamp - rctx->last_sample) < rracf->sampling_interval) {
+      return NGX_OK;
+    }
+    rctx->last_sample = timestamp;
+
     ngx_log_debug2(NGX_LOG_DEBUG_RTMP, s->connection->log, 0,
                    "record: %V frame: mlen=%uD",
                    &rracf->id, h->mlen);
-
-    timestamp = h->timestamp - rctx->epoch;
-
     /* write tag header */
     ph = hdr;
 
@@ -833,6 +849,7 @@ ngx_rtmp_record_node_av(ngx_rtmp_session_t *s, ngx_rtmp_record_rec_ctx_t *rctx,
 
     if (rctx->file.offset == 0) {
         rctx->epoch = h->timestamp;
+        rctx->last_sample = 0;
 
         if (ngx_rtmp_record_write_header(&rctx->file) != NGX_OK) {
             ngx_rtmp_record_node_close(s, rctx);
