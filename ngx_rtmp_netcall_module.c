@@ -9,8 +9,8 @@
 
 
 static ngx_int_t ngx_rtmp_netcall_postconfiguration(ngx_conf_t *cf);
-static void * ngx_rtmp_netcall_create_app_conf(ngx_conf_t *cf);
-static char * ngx_rtmp_netcall_merge_app_conf(ngx_conf_t *cf, 
+static void * ngx_rtmp_netcall_create_srv_conf(ngx_conf_t *cf);
+static char * ngx_rtmp_netcall_merge_srv_conf(ngx_conf_t *cf, 
         void *parent, void *child);
 
 static void ngx_rtmp_netcall_close(ngx_connection_t *cc);
@@ -27,7 +27,7 @@ ngx_str_t   ngx_rtmp_netcall_content_type_urlencoded =
 typedef struct {
     ngx_msec_t                                  timeout;
     ngx_log_t                                  *log;
-} ngx_rtmp_netcall_app_conf_t;
+} ngx_rtmp_netcall_srv_conf_t;
 
 
 typedef struct ngx_rtmp_netcall_session_s {
@@ -57,7 +57,7 @@ static ngx_command_t  ngx_rtmp_netcall_commands[] = {
       NGX_RTMP_MAIN_CONF|NGX_RTMP_SRV_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_RTMP_SRV_CONF_OFFSET,
-      offsetof(ngx_rtmp_netcall_app_conf_t, timeout),
+      offsetof(ngx_rtmp_netcall_srv_conf_t, timeout),
       NULL },
 
       ngx_null_command
@@ -69,10 +69,10 @@ static ngx_rtmp_module_t  ngx_rtmp_netcall_module_ctx = {
     ngx_rtmp_netcall_postconfiguration,     /* postconfiguration */
     NULL,                                   /* create main configuration */
     NULL,                                   /* init main configuration */
-    NULL,                                   /* create server configuration */
-    NULL,                                   /* merge server configuration */
-    ngx_rtmp_netcall_create_app_conf,       /* create app configuration */
-    ngx_rtmp_netcall_merge_app_conf         /* merge app configuration */
+    ngx_rtmp_netcall_create_srv_conf,       /* create server configuration */
+    ngx_rtmp_netcall_merge_srv_conf,        /* merge server configuration */
+    NULL,                                   /* create app configuration */
+    NULL                                    /* merge app configuration */
 };
 
 
@@ -93,27 +93,27 @@ ngx_module_t  ngx_rtmp_netcall_module = {
 
 
 static void *
-ngx_rtmp_netcall_create_app_conf(ngx_conf_t *cf)
+ngx_rtmp_netcall_create_srv_conf(ngx_conf_t *cf)
 {
-    ngx_rtmp_netcall_app_conf_t     *nacf;
+    ngx_rtmp_netcall_srv_conf_t     *nscf;
 
-    nacf = ngx_pcalloc(cf->pool, sizeof(ngx_rtmp_netcall_app_conf_t));
-    if (nacf == NULL) {
+    nscf = ngx_pcalloc(cf->pool, sizeof(ngx_rtmp_netcall_srv_conf_t));
+    if (nscf == NULL) {
         return NULL;
     }
 
-    nacf->timeout = NGX_CONF_UNSET_MSEC;
-    nacf->log = &cf->cycle->new_log;
+    nscf->timeout = NGX_CONF_UNSET_MSEC;
+    nscf->log = &cf->cycle->new_log;
 
-    return nacf;
+    return nscf;
 }
 
 
 static char *
-ngx_rtmp_netcall_merge_app_conf(ngx_conf_t *cf, void *parent, void *child)
+ngx_rtmp_netcall_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 {
-    ngx_rtmp_netcall_app_conf_t *prev = parent;
-    ngx_rtmp_netcall_app_conf_t *conf = child;
+    ngx_rtmp_netcall_srv_conf_t *prev = parent;
+    ngx_rtmp_netcall_srv_conf_t *conf = child;
 
     ngx_conf_merge_msec_value(conf->timeout, prev->timeout, 10000);
 
@@ -166,7 +166,7 @@ ngx_rtmp_netcall_create(ngx_rtmp_session_t *s, ngx_rtmp_netcall_init_t *ci)
     ngx_rtmp_netcall_ctx_t         *ctx;
     ngx_peer_connection_t          *pc;
     ngx_rtmp_netcall_session_t     *cs;
-    ngx_rtmp_netcall_app_conf_t    *cacf;
+    ngx_rtmp_netcall_srv_conf_t    *cacf;
     ngx_connection_t               *c, *cc;
     ngx_pool_t                     *pool;
     ngx_int_t                       rc;
@@ -174,7 +174,7 @@ ngx_rtmp_netcall_create(ngx_rtmp_session_t *s, ngx_rtmp_netcall_init_t *ci)
     pool = NULL;
     c = s->connection;
 
-    cacf = ngx_rtmp_get_module_app_conf(s, ngx_rtmp_netcall_module);
+    cacf = ngx_rtmp_get_module_srv_conf(s, ngx_rtmp_netcall_module);
     if (cacf == NULL) {
         goto error;
     }
