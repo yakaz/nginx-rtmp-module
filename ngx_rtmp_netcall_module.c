@@ -108,10 +108,10 @@ ngx_rtmp_netcall_create_srv_conf(ngx_conf_t *cf)
         return NULL;
     }
 
-    nacf->timeout = NGX_CONF_UNSET_MSEC;
-    nacf->bufsize = NGX_CONF_UNSET_SIZE;
+    nscf->timeout = NGX_CONF_UNSET_MSEC;
+    nscf->bufsize = NGX_CONF_UNSET_SIZE;
 
-    nacf->log = &cf->cycle->new_log;
+    nscf->log = &cf->cycle->new_log;
 
     return nscf;
 }
